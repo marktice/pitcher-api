@@ -1,43 +1,61 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const mongoose = require('./db/mongoose');
+const { Job } = require('./models/Job');
+
 const app = express();
 
-const jobs = [
-  {
-    _id: 1,
-    title: 'Mow my lawn',
-    description: 'Its really long, halp me!',
-    imageURL:
-      'https://www.rainbowlawncare.com/wp-content/uploads/2017/02/RLC-no-mow-guy-350x216.jpg',
-    companyURL: 'https://www.rainbowlawncare.com/lawn-types/no-mow/',
-    budget: 500
-  },
-  {
-    _id: 2,
-    title: 'Kill neighbors cat',
-    description: 'Please, he keeps looking at me',
-    imageURL: 'https://i.ytimg.com/vi/YCaGYUIfdy4/maxresdefault.jpg',
-    companyURL: 'https://www.killmycat.com.au',
-    budget: 3.5
+app.use(bodyParser.json());
+
+app.get('/jobs', async (req, res) => {
+  try {
+    const jobs = await Job.find();
+    res.status(200).send({ jobs });
+  } catch (error) {
+    res.status(400).send({ error });
   }
-];
-
-app.use(bodyParser());
-
-app.get('/jobs', (req, res) => {
-  res.status(200).send({ jobs });
 });
 
-app.get('/jobs/:id', (req, res) => {
+app.get('/jobs/:id', async (req, res) => {
   const id = req.params.id;
-  const job = jobs[id - 1];
-  res.status(200).send(job);
+  try {
+    const job = await Job.findById(id);
+    res.status(200).send({ job });
+  } catch (error) {
+    res.status(400).send({ error });
+  }
 });
 
-app.post('/jobs', (req, res) => {
-  const job = req.body;
-  res.status(200).send({ job });
+app.post('/jobs', async (req, res) => {
+  const { title, description, imageURL, companyURL, budget } = req.body;
+  const newJob = new Job({
+    title,
+    description,
+    imageURL,
+    companyURL,
+    budget
+  });
+
+  try {
+    const job = await newJob.save();
+    if (!job) {
+      throw new Error('Could not save');
+    }
+    res.status(200).send({ job });
+  } catch (error) {
+    res.status(400).send({ error });
+  }
+});
+
+app.delete('/jobs/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const job = await Job.findByIdAndRemove(id);
+    res.status(200).send({ job });
+  } catch (error) {
+    res.status(400).send({ error });
+  }
 });
 
 app.listen('1337', () => {
