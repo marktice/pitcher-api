@@ -9,7 +9,7 @@ const JobSchema = new mongoose.Schema({
   description: String,
   imageURL: String,
   companyURL: String,
-  Budget: Number
+  budget: Number
 });
 
 const Job = mongoose.model('Job', JobSchema);

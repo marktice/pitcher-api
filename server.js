@@ -62,18 +62,18 @@ app.post('/jobs', authenicate, async (req, res) => {
   }
 });
 
-app.post('/users/login', (req, res) => {
+app.post('/users/login', async (req, res) => {
   const { email, password } = req.body;
-
-  User.findOne(email)
-    .then((user) => {
-      return user.generateAuthToken().then((token) => {
-        res.header('x-auth', token).send(user);
-      });
-    })
-    .catch((err) => {
-      res.status(400).send();
-    });
+  try {
+    const user = await User.findByCredentials(email, password);
+    if (!user) {
+      res.status(400).send({ error });
+    }
+    const token = await user.generateAuthToken();
+    res.header('x-auth', token).send({ user });
+  } catch (error) {
+    res.status(400).send({ error });
+  }
 });
 
 app.delete('/jobs/:id', async (req, res) => {

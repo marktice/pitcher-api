@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -24,14 +25,33 @@ UserSchema.methods.generateAuthToken = async function() {
   return token;
 };
 
+// Statics
+UserSchema.statics.findByCredentials = async function(email, password) {
+  const User = this;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error();
+    }
+    const res = await bcrypt.compare(password, user.password);
+    if (!res) {
+      throw new Error();
+    } else {
+      return user;
+    }
+  } catch (error) {
+    return Promise.reject('Incorrect email or password');
+  }
+};
+
 UserSchema.statics.findByToken = function(token) {
   const User = this;
   let decoded;
 
   try {
     decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (e) {
-    return Promise.reject();
+  } catch (error) {
+    return Promise.reject('Could not verify');
   }
 
   return User.findOne({
@@ -39,6 +59,22 @@ UserSchema.statics.findByToken = function(token) {
     tokens: token
   });
 };
+
+// Pre save
+UserSchema.pre('save', function(next) {
+  const user = this;
+
+  if (user.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        next();
+      });
+    });
+  } else {
+    next();
+  }
+});
 
 const User = mongoose.model('User', UserSchema);
 
