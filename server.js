@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const { mongoose } = require('./db/mongoose');
@@ -8,6 +9,7 @@ const { authenicate } = require('./middleware/authenticate');
 
 const app = express();
 
+app.use(cors());
 app.use(bodyParser.json());
 
 // Job Routes
