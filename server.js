@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const mongoose = require('./db/mongoose');
+const { mongoose } = require('./db/mongoose');
 const { Job } = require('./models/Job');
 const { User } = require('./models/User');
 const { authenicate } = require('./middleware/authenticate');
@@ -136,3 +136,5 @@ app.get('/users/me', authenicate, async (req, res) => {
 app.listen('1337', () => {
   console.log('server started on port 1337');
 });
+
+module.exports = { app };
